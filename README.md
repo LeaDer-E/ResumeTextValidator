@@ -1,132 +1,146 @@
 # ResumeTextValidator
 
-**ResumeTextValidator** is an advanced document inspection tool designed to validate and analyze `.docx` resume files for formatting, character consistency, and placeholder content. It intelligently detects unusual symbols, unwanted phrases, and mixed Arabic-English text in professional documents.
+**ResumeTextValidator** is an intelligent analyzer for `.docx` resume files. It detects text issues such as invalid symbols, unprofessional placeholder phrases, and mixed Arabic-English content within a single word.
+
+It supports both Arabic and English and generates professional reports.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-* 🌐 **Multi-language Support:** Detects mixed Arabic and Latin content in single words.
-* ✏️ **Smart Keyword Flagging:** Highlights placeholder phrases like `Not Specified`, `غير مذكور`, `N/A`, etc.
-* 🔦 **Highlight Issues:** Only problematic words or characters are highlighted—not the whole sentence.
-* ⇄ **RTL/LTR Detection:** Automatically adapts HTML report directionality based on detected language.
-* 📃 **Readable Reports:** Generates well-structured terminal output and dark-themed HTML reports.
-* 📅 **Auto Cleanup:** Keeps only the latest 10 reports + `MainResult.html` as the latest snapshot.
-* 📁 **Path Filtering:** Skips temporary or ignored folders like `~temp`, `my env`, etc.
+* ✅ **Smart Text Analysis:** Detects words with invalid symbols or mixed-language characters.
+* 🌐 **RTL/LTR Direction Detection:** Automatically adjusts paragraph direction in HTML reports based on content language.
+* 🔍 **Precise Highlighting:** Only problematic words or characters are marked—not full lines.
+* 🧠 **Smart Banned Keywords List:** Flags entries like `Not Specified`, `N/A`, `غير مذكور`, and more.
+* 📑 **Multiple Reports:** Clean dark-themed HTML and organized text reports with the latest 10 kept.
+* 🚫 **File/Folder Skipping:** Supports exclusion via `Ex.txt`.
+* 🌍 **Supports full Unicode including common punctuation (Arabic and English).**
 
 ---
 
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/LeaDer-E/ResumeTextValidator.git
-cd ResumeTextValidator
-```
-
-### 2. Setup Virtual Environment
-
-```bash
-python -m venv myenv
-myenv\Scripts\activate  # On Windows
-```
-
-### 3. Install Dependencies
+## ⚙️ Requirements
 
 ```bash
 pip install -r requirements.txt
 ```
 
+#### `requirements.txt` content:
+
+```txt
+docx
+colorama
+```
+
 ---
 
-## 🌐 How to Use
+## 🚀 How to Use
 
-### Option A: Manual Path Input
+### Option 1: Manual Path Entry
 
 ```bash
 python main.py
 ```
 
-Choose option `1` and enter the path to your resume folder.
+Then select option `1` and provide the folder path containing `.docx` files.
 
-### Option B: Use Main\_Path.txt
+### Option 2: Use `Main_Path.txt`
 
-Create a file named `Main_Path.txt` and paste your folder path inside:
+* Create a file named `Main_Path.txt`
+* Paste the full path inside:
 
+```txt
+C:\Users\YourName\Documents\Resumes
 ```
-C:\Users\yourname\Documents\Resumes
-```
 
-Then run the tool and select option `2`.
+Then run the script and select option `2`.
 
 ---
 
-## 📑 Output Overview
+## 📂 Output Structure
 
-All scan results are saved to the `/Result` directory. The structure includes:
+All scan results are saved in the `Result/` directory:
 
-```bash
+```
 Result/
-├─ report_YYYY-MM-DD_HH-MM-SS.txt     # Text report
-├─ report_YYYY-MM-DD_HH-MM-SS.html    # HTML report
-└─ MainResult.html                    # Always holds the latest result
+├─ report_YYYY-MM-DD_HH-MM-SS.txt     # Plain text report
+├─ report_YYYY-MM-DD_HH-MM-SS.html    # Dark-themed HTML report
+└─ MainResult.html                    # Always holds the latest output
 ```
 
-* Reports include:
+Each report includes:
 
-  * 📄 File name
-  * 📍 Full path
-  * 📁 Folder name
-  * 📈 Section-wise detected issues
-  * ⚡ Highlighted problematic words only
-
----
-
-## 🔍 Keywords & Symbols Filtered
-
-**Common flagged keywords:**
-
-* Not Specified, Not Disclosed, Not Available, TBC, Yet to Be Determined
-* غير مذكور, غير متوفر, لم يُذكر, لا ينطبق, etc.
-
-**Allowed symbols:**
-
-* Basic punctuation: `.`, `,`, `:`, `;`, `%`, `@`, `&`, `|`, `-`, `+`, `(`, `)`
-* RTL/LTR dashes: `‐`, `‑`, `‒`, `–`, `—`
-* Space + Zero-width space `\u200b`
-
-**Explicitly allowed words:**
-
-* `Café`, `cafe`, `Driver’s` (apostrophe handled)
+* 📄 File name
+* 📍 Full path
+* 📁 Folder name
+* 🔸 Section headers from the resume
+* ❗ Problematic lines, with only the suspicious content highlighted
 
 ---
 
-## 📊 Example Use Case
+## 🔒 Exclusions
+
+### To exclude files/folders:
+
+* Create an `Ex.txt` file
+* List:
+
+  * Any `.docx` filenames to ignore
+  * Folder names to skip
+
+Example:
+
+```txt
+bad_resume.docx
+Old_Resumes
+```
+
+---
+
+## 🧠 Sample Banned Keywords:
+
+* `Not Specified`, `Not Disclosed`, `TBC`, `N/A`, `Yet to Be Determined`
+* `غير مذكور`, `غير متوفر`, `لم يُذكر`, `لا ينطبق`
+
+## ✒️ Allowed Symbols:
+
+* Basic punctuation: `.,:;!?-+@|()[]%`
+* Regular and zero-width spaces
+* Arabic dash variants: `–`, `—`, `‑`
+
+## ✅ Whitelisted Words:
+
+* `Café`, `café`
+
+---
+
+## 📦 Sample Output
 
 ```bash
-📄 File: example_resume.docx
-📍 Path: C:\Documents\Resumes\example_resume.docx
+📄 File: AhmedCV.docx
+📍 Path: C:\Resumes\AhmedCV.docx
 📁 Folder: Resumes
-🔸 Section: Summary
-❗ "Intermediate proficiency"  ← (contains invisible Unicode space)
+🔸 Section: Objective
+❗ Problem Line:
+   → I am a <span style="color:red;">Café</span> developer who...
 ```
 
-HTML output auto-switches between RTL and LTR based on paragraph language.
+---
+
+## 📌 Important Notes
+
+* Skips MS Word temp files starting with `~$`
+* If the script exits immediately in GUI mode, ensure this line is at the end:
+
+```python
+if __name__ == "__main__":
+    main()
+```
 
 ---
 
-## 🚀 Planned Enhancements
+## 📄 License
 
-* Support for `.pdf` scanning.
-* Export issues as CSV.
-* Resume text correction suggestions using LLMs.
-
----
-
-## 📃 License
-
-This project is licensed under the [MIT License](LICENSE).
+MIT License
 
 ---
 
