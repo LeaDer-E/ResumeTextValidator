@@ -14,7 +14,7 @@ ARABIC = '\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF'
 LATIN = 'A-Za-z'
 # ALLOWED_SYMBOLS = r'\|\/\-\–\:\.%\.,;:!?\"\'’\(\)_\+\&\s\u200b0-9@éÉ'
 # ALLOWED_SYMBOLS = r'\|\/\-\–\—\:\.%\.,;:!?\"\'’\(\)_\+\&\s\u200b0-9@éÉ\u2010\u2011\u2012\u2013\u2014'
-ALLOWED_SYMBOLS = r'\|\/\-\–\—\:\.%\.,;:!?\"\'’\(\)_\+\&\s\u200b0-9@،\u2010\u2011\u2012\u2013\u2014'
+ALLOWED_SYMBOLS = r'\|\/\-\–\—\:\.%\.,;:!?\"\'’\(\)_\+\&\s\u200b0-9@،”“\u2010\u2011\u2012\u2013\u2014'
 
 
 EXCEPTION_WORDS = ['Café', 'café']
@@ -34,6 +34,19 @@ def is_mixed_word(word):
 
 def is_arabic(text):
     return bool(re.search(f'[{ARABIC}]', text))
+
+def load_exclusions(file="Ex.txt"):
+    if not os.path.exists(file):
+        return set(), set()
+    files, folders = set(), set()
+    with open(file, encoding='utf-8') as f:
+        for line in f:
+            name = line.strip().lower()
+            if name.endswith('.docx'):
+                files.add(name)
+            elif name:
+                folders.add(name)
+    return files, folders
 
 def highlight_issues_terminal(text):
     words = text.split()
@@ -137,28 +150,35 @@ def save_reports(results, timestamp):
         main_html.write(html_final)
 
 def walk_and_scan_directory(root):
+    excluded_files, excluded_dirs = load_exclusions()
     result_data = []
     for dirpath, _, filenames in os.walk(root):
-        if any(x in dirpath.lower() for x in ["~temp", "my env"]):
+        if any(ex in dirpath.lower() for ex in excluded_dirs.union({"~temp", "my env"})):
             continue
         for filename in filenames:
-            if filename.lower().endswith('.docx') and not any(x in filename.lower() for x in ["~temp", "my env"]):
-                full_path = os.path.join(dirpath, filename)
-                relative_folder = os.path.relpath(dirpath, root)
-                issues = scan_docx_file(full_path)
-                if issues:
-                    print(Fore.CYAN + Style.BRIGHT + "\n" + "="*60)
-                    print(Fore.LIGHTCYAN_EX + Style.BRIGHT + f"📄 File: {filename}")
-                    print(Fore.CYAN + Style.BRIGHT + "="*60)
-                    print(Fore.YELLOW + f"📍 Path: {full_path}")
-                    print(Fore.LIGHTMAGENTA_EX + f"📁 Folder: {relative_folder}")
-                    for section, lines in issues.items():
-                        print(Fore.LIGHTBLUE_EX + Style.BRIGHT + f"\n🔸 Section: {section}")
-                        print(Fore.LIGHTBLUE_EX + Style.BRIGHT + "-"*45)
-                        for _, highlighted, _, _ in lines:
-                            print(Fore.LIGHTRED_EX + "❗ Problem Line:")
-                            print(Fore.WHITE + "   → " + highlighted)
-                    result_data.append((filename, full_path, relative_folder, issues))
+            lower_name = filename.lower()
+            if (
+                not lower_name.endswith(".docx") or
+                lower_name.startswith("~$") or
+                lower_name in excluded_files
+            ):
+                continue
+            full_path = os.path.join(dirpath, filename)
+            relative_folder = os.path.relpath(dirpath, root)
+            issues = scan_docx_file(full_path)
+            if issues:
+                print(Fore.CYAN + Style.BRIGHT + "\n" + "="*60)
+                print(Fore.LIGHTCYAN_EX + Style.BRIGHT + f"📄 File: {filename}")
+                print(Fore.CYAN + Style.BRIGHT + "="*60)
+                print(Fore.YELLOW + f"📍 Path: {full_path}")
+                print(Fore.LIGHTMAGENTA_EX + f"📁 Folder: {relative_folder}")
+                for section, lines in issues.items():
+                    print(Fore.LIGHTBLUE_EX + Style.BRIGHT + f"\n🔸 Section: {section}")
+                    print(Fore.LIGHTBLUE_EX + Style.BRIGHT + "-"*45)
+                    for _, highlighted, _, _ in lines:
+                        print(Fore.LIGHTRED_EX + "❗ Problem Line:")
+                        print(Fore.WHITE + "   → " + highlighted)
+                result_data.append((filename, full_path, relative_folder, issues))
     prepare_result_folder()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     save_reports(result_data, timestamp)
@@ -192,5 +212,11 @@ def main():
     except KeyboardInterrupt:
         print(Fore.GREEN + "\n👋 Exiting.")
         sys.exit()
+       
+    except Exception as e:
+        print(Fore.RED + f"\n❌ Unexpected error: {e}")
+        input(Fore.YELLOW + "\n↩️ Press Enter to exit...")
 
-main()
+if __name__ == "__main__":
+    main()
+
